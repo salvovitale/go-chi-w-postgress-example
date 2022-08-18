@@ -18,37 +18,22 @@ func NewHandler(s store.Store) *Handler {
 
 	// add logger middleware
 	h.Use(middleware.Logger)
+
+	// homepage
+	h.Get("/", h.homeView())
+
+	// sub paths
 	h.Route("/threads", func(r chi.Router) {
-		r.Get("/", h.ThreadsListView())
-		r.Get("/new", h.ThreadsCreateView())
-		r.Post("/", h.ThreadsStore())
-		r.Post("/{id}/delete", h.ThreadsDelete())
-	})
+		r.Get("/", h.threadsListView())
+		r.Get("/new", h.threadCreateView())
+		r.Get("/{id}", h.threadView())
+		r.Post("/", h.threadStore())
+		r.Post("/{id}/delete", h.threadDelete())
 
-	h.Get("/html", func(w http.ResponseWriter, r *http.Request) {
-		// "New" should contain the name of the root where the includes will be added
-		t := template.Must(template.New("layout.html").ParseGlob("templates/includes/*.html"))
-		// now we can add the rest of the file in "t"
-		t = template.Must(t.ParseFiles("templates/layout.html", "templates/child-template.html"))
-		type params struct {
-			Title   string
-			Text    string
-			Lines   []string
-			Number1 int
-			Number2 int
-		}
-
-		t.Execute(w, params{
-			Title: "Reddit Clone",
-			Text:  "Welcome to the Reddit Clone",
-			Lines: []string{
-				"Lines1",
-				"Lines2",
-				"Lines3",
-			},
-			Number1: 1,
-			Number2: 2,
-		})
+		// post routes
+		r.Get("/{id}/new", h.postCreateView())
+		r.Get("/{threadId}/{postId}", h.postView())
+		r.Post("/{id}", h.postStore())
 	})
 
 	return h
@@ -59,31 +44,20 @@ type Handler struct {
 	store store.Store
 }
 
-const threadsListHTML = `
-	<h1>Threads 2</h1>
-	<dl>
-	{{range .Threads}}
-		<dt><strong>{{.Title}}</strong></dt>
-		<dd>{{.Description}}</dd>
-		<dd>
-			<form action="/threads/{{.ID}}/delete" method="POST">
-				<button type="submit">Delete</button>
-			</form>
-		</dd>
-	{{end}}
-	</dl>
-	<a href="/threads/new">Create Thread</a>
-`
+func (h *Handler) homeView() http.HandlerFunc {
+	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/home.html"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		tmpl.Execute(w, nil)
+	}
+}
 
-func (h *Handler) ThreadsListView() http.HandlerFunc {
+func (h *Handler) threadsListView() http.HandlerFunc {
 	// wrap some local data that wont be visible from outside
 	type data struct {
 		Threads []store.Thread
 	}
 
-	// this will be run once when the server starts
-	// if the parsing fails the application wont boot as it would be unable to render the page
-	tmpl := template.Must(template.New("").Parse(threadsListHTML))
+	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/threads.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		threads, err := h.store.Threads()
 		if err != nil {
@@ -94,31 +68,21 @@ func (h *Handler) ThreadsListView() http.HandlerFunc {
 	}
 }
 
-const threadCreateHTML = `
-	<h1>New Thread</h1>
-	<form action="/threads" method="post">
-		<table>
-			<tr>
-				<td>Title</td>
-				<td><input type="text" name="title" /></td>
-			</tr>
-			<tr>
-				<td>Description</td>
-				<td><input type="text" name="description" /></td>
-			</tr>
-		</table>
-		<button type="submit">Create thread</button>
-	</form>
-`
-
-func (h *Handler) ThreadsCreateView() http.HandlerFunc {
-	tmpl := template.Must(template.New("").Parse(threadCreateHTML))
+func (h *Handler) threadCreateView() http.HandlerFunc {
+	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/thread_create.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, nil)
 	}
 }
 
-func (h *Handler) ThreadsStore() http.HandlerFunc {
+func (h *Handler) threadView() http.HandlerFunc {
+	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/thread.html"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		tmpl.Execute(w, nil)
+	}
+}
+
+func (h *Handler) threadStore() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//parse the form
 		title := r.FormValue("title")
@@ -138,7 +102,7 @@ func (h *Handler) ThreadsStore() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) ThreadsDelete() http.HandlerFunc {
+func (h *Handler) threadDelete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//parse the id
 		idStr := chi.URLParam(r, "id")
@@ -150,6 +114,42 @@ func (h *Handler) ThreadsDelete() http.HandlerFunc {
 		}
 		//delete thread from db
 		if err := h.store.DeleteThread(id); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// redirect to the thread list
+		http.Redirect(w, r, "/threads", http.StatusFound)
+	}
+}
+
+// Post routes below here
+
+func (h *Handler) postCreateView() http.HandlerFunc {
+	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/post_create.html"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		tmpl.Execute(w, nil)
+	}
+}
+
+func (h *Handler) postView() http.HandlerFunc {
+	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/post.html"))
+	return func(w http.ResponseWriter, r *http.Request) {
+		tmpl.Execute(w, nil)
+	}
+}
+
+func (h *Handler) postStore() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//parse the form
+		title := r.FormValue("title")
+		description := r.FormValue("description")
+		//TODO validate the form
+		//send new thread to db
+		if err := h.store.CreateThread(&store.Thread{
+			ID:          uuid.New(),
+			Title:       title,
+			Description: description,
+		}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

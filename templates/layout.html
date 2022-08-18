@@ -1,42 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reddit clone</title>
-</head>
-<body>
-    {{block "header" .}}{{end}}
-    <h1>{{.Title}}</h1>
-    <p>
-      {{.Text}}
-    </p>
-    <ul>
-      {{range .Lines}}
-        <!-- since it is a slice of string the "." is the value -->
-        <!-- if it was a struct we could access the field -->
-        <li>{{.}}</li>
-      {{end}}
-    </ul>
-    <!-- other options are ne, gt, lt, ge, le -->
-    {{if eq .Number1 .Number2}}
-      <p>Numbers are equal</p>
-    {{else}}
-      <p>Numbers are not equal</p>
-    {{end}}
+<html>
 
-    <!-- adding nested templates -->
-    <!-- This is useful for example when you have a layout with all the js and css files loaded and then load the sub-components-->
-    {{block "content" .}}
-      <p>This is the default content!!!</p>
-    {{end}}
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  </head>
 
-    <p>here below I am using a template included</p>
-    {{template "paragraph" .Text}}
-    {{template "paragraph" .Text}}
-    {{template "paragraph" .Text}}
+  <body>
+    <nav class="navbar navbar-light container">
+      <a class="navbar-brand text-primary" href="#">goreddit</a>
+    </nav>
+    <div class="header bg-light border-bottom border-top py-5">
+      <div class="container">
+        {{block "header" .}}{{end}}
+      </div>
+    </div>
+    <div class="container py-5">
+      <div class="row">
+        <div class="col-xl-8 order-1 order-xl-0">
+          {{block "content" .}} {{end}}
+        </div>
+        <div class="col-xl-4 order-0 order-xl-1">
+          {{block "sidebar" .}} {{end}}
+        </div>
+      </div>
+    </div>
+  </body>
 
-    {{block "footer" .}}{{end}}
-</body>
 </html>
