@@ -1,8 +1,8 @@
 package web
 
 import (
+	"html/template"
 	"net/http"
-	"text/template"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -25,6 +25,32 @@ func NewHandler(s store.Store) *Handler {
 		r.Post("/{id}/delete", h.ThreadsDelete())
 	})
 
+	h.Get("/html", func(w http.ResponseWriter, r *http.Request) {
+		// "New" should contain the name of the root where the includes will be added
+		t := template.Must(template.New("layout.html").ParseGlob("templates/includes/*.html"))
+		// now we can add the rest of the file in "t"
+		t = template.Must(t.ParseFiles("templates/layout.html", "templates/child-template.html"))
+		type params struct {
+			Title   string
+			Text    string
+			Lines   []string
+			Number1 int
+			Number2 int
+		}
+
+		t.Execute(w, params{
+			Title: "Reddit Clone",
+			Text:  "Welcome to the Reddit Clone",
+			Lines: []string{
+				"Lines1",
+				"Lines2",
+				"Lines3",
+			},
+			Number1: 1,
+			Number2: 2,
+		})
+	})
+
 	return h
 }
 
@@ -34,7 +60,7 @@ type Handler struct {
 }
 
 const threadsListHTML = `
-	<h1>Threads</h1>
+	<h1>Threads 2</h1>
 	<dl>
 	{{range .Threads}}
 		<dt><strong>{{.Title}}</strong></dt>
