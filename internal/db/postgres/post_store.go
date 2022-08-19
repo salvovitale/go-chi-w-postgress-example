@@ -18,7 +18,7 @@ type PostStore struct {
 
 func (s *PostStore) PostsByThread(threadID uuid.UUID) ([]store.Post, error) {
 	var p []store.Post
-	if err := s.Select(&p, "SELECT * FROM posts WHERE thread_id = $1", threadID); err != nil {
+	if err := s.Select(&p, "SELECT * FROM posts WHERE thread_id = $1 ORDER BY votes DESC", threadID); err != nil {
 		return []store.Post{}, fmt.Errorf("error getting posts: %w", err)
 	}
 	return p, nil

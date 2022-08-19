@@ -18,7 +18,7 @@ type CommentStore struct {
 
 func (s *CommentStore) CommentsByPost(postID uuid.UUID) ([]store.Comment, error) {
 	var c []store.Comment
-	if err := s.Select(&c, "SELECT * FROM comments WHERE post_id = $1", postID); err != nil {
+	if err := s.Select(&c, "SELECT * FROM comments WHERE post_id = $1 ORDER BY votes DESC", postID); err != nil {
 		return []store.Comment{}, fmt.Errorf("error getting comments: %w", err)
 	}
 	return c, nil
