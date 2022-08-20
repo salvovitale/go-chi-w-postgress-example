@@ -18,7 +18,36 @@ type PostStore struct {
 
 func (s *PostStore) PostsByThread(threadID uuid.UUID) ([]store.Post, error) {
 	var p []store.Post
-	if err := s.Select(&p, "SELECT * FROM posts WHERE thread_id = $1 ORDER BY votes DESC", threadID); err != nil {
+	var query = `
+		SELECT
+			posts.*,
+			COUNT(comments.*) AS comments_count
+		FROM posts
+		JOIN comments ON comments.post_id = posts.id
+		WHERE thread_id = $1
+		GROUP BY posts.id
+		ORDER BY votes DESC
+	`
+	if err := s.Select(&p, query, threadID); err != nil {
+		return []store.Post{}, fmt.Errorf("error getting posts: %w", err)
+	}
+	return p, nil
+}
+
+func (s *PostStore) Posts() ([]store.Post, error) {
+	var p []store.Post
+	var query = `
+		SELECT
+			posts.*,
+			COUNT(comments.*) AS comments_count,
+			threads.title AS thread_title
+		FROM posts
+		JOIN comments ON comments.post_id = posts.id
+		JOIN threads ON threads.id = posts.thread_id
+		GROUP BY posts.id, threads.title
+		ORDER BY votes DESC
+	`
+	if err := s.Select(&p, query); err != nil {
 		return []store.Post{}, fmt.Errorf("error getting posts: %w", err)
 	}
 	return p, nil
