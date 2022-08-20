@@ -3,29 +3,17 @@
 {{end}}
 
 {{define "content"}}
+{{range .Threads}}
 <div class="card mb-4">
     <div class="card-body">
         <a href="#" class="d-block card-title text-body mt-1 h5">
-            The Go Programming Language
+            {{.Title}}
         </a>
-        <p class="card-text">Ask questions and post articles about the Go
-            programming
-            language and
-            related tools, events etc.</p>
-        <a href="thread.html" class="btn btn-primary">Browse Thread</a>
+        <p class="card-text">{{.Description}}</p>
+        <a href="/threads/{{.ID}}" class="btn btn-primary">Browse Thread</a>
     </div>
 </div>
-<div class="card mb-4">
-    <div class="card-body">
-        <a href="#" class="d-block card-title text-body mt-1 h5">
-            Lorem ipsum dolor sit amet
-        </a>
-        <p class="card-text">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy
-            eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero
-            eos et accusam et justo duo dolores et ea rebum. </p>
-        <a href="thread.html" class="btn btn-primary">Browse Thread</a>
-    </div>
-</div>
+{{end}}
 {{end}}
 
 {{define "sidebar"}}
@@ -33,7 +21,7 @@
     <div class="card-body">
         <h5 class="card-title">Create a new thread</h5>
         <p class="card-text">Start a new community on goreddit and share experiences.</p>
-        <a href="#" class="btn btn-primary btn-block">Create Thread</a>
+        <a href="/threads/new" class="btn btn-primary btn-block">Create Thread</a>
     </div>
 </div>
 {{end}}
