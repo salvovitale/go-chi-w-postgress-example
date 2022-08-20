@@ -6,10 +6,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/csrf"
 	"github.com/salvovitale/go-chi-w-postgress-example/internal/db/store"
 )
 
-func NewHandler(s store.Store) *Handler {
+func NewHandler(s store.Store, csrfKey []byte) *Handler {
 	h := &Handler{
 		Mux:   chi.NewRouter(),
 		store: s,
@@ -18,9 +19,11 @@ func NewHandler(s store.Store) *Handler {
 	threadsHandler := ThreadHandler{store: s}
 	postHandler := PostHandler{store: s}
 	commentHandler := CommentHandler{store: s}
+
 	// add logger middleware
 	h.Use(middleware.Logger)
 
+	h.Use(csrf.Protect(csrfKey, csrf.Secure(false))) // set security to false for development otherwise the cookie will only be sent over https
 	// homepage
 	h.Get("/", h.homeView())
 

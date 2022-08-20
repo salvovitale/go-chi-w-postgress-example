@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/gorilla/csrf"
 	"github.com/salvovitale/go-chi-w-postgress-example/internal/db/store"
 )
 
@@ -16,6 +17,7 @@ type PostHandler struct {
 func (h *PostHandler) createView() http.HandlerFunc {
 	type data struct {
 		Thread store.Thread
+		CSRF   template.HTML // string which is not escaped
 	}
 
 	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/post_create.html"))
@@ -34,7 +36,7 @@ func (h *PostHandler) createView() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, data{Thread: t})
+		tmpl.Execute(w, data{Thread: t, CSRF: csrf.TemplateField(r)})
 	}
 }
 
@@ -43,6 +45,7 @@ func (h *PostHandler) view() http.HandlerFunc {
 		Thread   store.Thread
 		Post     store.Post
 		Comments []store.Comment
+		CSRF     template.HTML // string which is not escaped
 	}
 
 	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/post.html"))
@@ -87,7 +90,7 @@ func (h *PostHandler) view() http.HandlerFunc {
 		}
 
 		// execute the template passing both the thread and post
-		tmpl.Execute(w, data{Thread: t, Post: p, Comments: cc})
+		tmpl.Execute(w, data{Thread: t, Post: p, Comments: cc, CSRF: csrf.TemplateField(r)})
 	}
 }
 
