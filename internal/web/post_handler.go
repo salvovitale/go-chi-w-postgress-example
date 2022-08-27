@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/gorilla/csrf"
@@ -11,7 +12,8 @@ import (
 )
 
 type PostHandler struct {
-	store store.Store
+	store    store.Store
+	sessions *scs.SessionManager
 }
 
 func (h *PostHandler) createView() http.HandlerFunc {

@@ -4,21 +4,23 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/csrf"
 	"github.com/salvovitale/go-chi-w-postgress-example/internal/db/store"
 )
 
-func NewHandler(s store.Store, csrfKey []byte) *Handler {
+func NewHandler(s store.Store, ss *scs.SessionManager, csrfKey []byte) *Handler {
 	h := &Handler{
-		Mux:   chi.NewRouter(),
-		store: s,
+		Mux:      chi.NewRouter(),
+		store:    s,
+		sessions: ss,
 	}
 
-	threadsHandler := ThreadHandler{store: s}
-	postHandler := PostHandler{store: s}
-	commentHandler := CommentHandler{store: s}
+	threadsHandler := ThreadHandler{store: s, sessions: ss}
+	postHandler := PostHandler{store: s, sessions: ss}
+	commentHandler := CommentHandler{store: s, sessions: ss}
 
 	// add logger middleware
 	h.Use(middleware.Logger)
@@ -51,8 +53,9 @@ func NewHandler(s store.Store, csrfKey []byte) *Handler {
 }
 
 type Handler struct {
-	*chi.Mux
-	store store.Store
+	*chi.Mux //embedded structure
+	store    store.Store
+	sessions *scs.SessionManager
 }
 
 func (h *Handler) homeView() http.HandlerFunc {

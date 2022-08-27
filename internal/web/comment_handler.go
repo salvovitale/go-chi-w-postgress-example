@@ -3,13 +3,15 @@ package web
 import (
 	"net/http"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/salvovitale/go-chi-w-postgress-example/internal/db/store"
 )
 
 type CommentHandler struct {
-	store store.Store
+	store    store.Store
+	sessions *scs.SessionManager
 }
 
 func (h *CommentHandler) save() http.HandlerFunc {
