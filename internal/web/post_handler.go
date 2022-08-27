@@ -141,6 +141,9 @@ func (h *PostHandler) save() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// add flash message
+		h.sessions.Put(r.Context(), "flash", "Your new post has been created.")
 		// redirect to the new post
 		http.Redirect(w, r, "/threads/"+t.ID.String()+"/"+p.ID.String(), http.StatusFound)
 	}

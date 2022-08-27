@@ -103,6 +103,9 @@ func (h *ThreadHandler) save() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// add flash message
+		h.sessions.Put(r.Context(), "flash", "Your new thread has been created.")
 		// redirect to the thread list
 		http.Redirect(w, r, "/threads", http.StatusFound)
 	}
@@ -123,6 +126,10 @@ func (h *ThreadHandler) delete() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// add flash message
+		h.sessions.Put(r.Context(), "flash", "Your thread has been deleted.")
+
 		// redirect to the thread list
 		http.Redirect(w, r, "/threads", http.StatusFound)
 	}

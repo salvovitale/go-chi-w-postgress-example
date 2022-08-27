@@ -45,6 +45,10 @@ func (h *CommentHandler) save() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// add flash message
+		h.sessions.Put(r.Context(), "flash", "Your comment has been submitted.")
+
 		// redirect to the new post
 		http.Redirect(w, r, r.Referer(), http.StatusFound)
 	}
