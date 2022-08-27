@@ -24,5 +24,7 @@ func main() {
 
 	csrfKey := []byte("01234567890123456789012345678901") //32 bytes long
 	h := web.NewHandler(store, sessions, csrfKey)
-	http.ListenAndServe(":3000", h)
+
+	// to avoid the error scs: no session data in context we need to wrap the web handler which in this case embeds the chi mux into the LoadAndSave middleware
+	http.ListenAndServe(":3000", sessions.LoadAndSave(h))
 }

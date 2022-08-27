@@ -19,6 +19,7 @@ type ThreadHandler struct {
 func (h *ThreadHandler) listView() http.HandlerFunc {
 	// wrap some local data that wont be visible from outside
 	type data struct {
+		SessionData
 		Threads []store.Thread
 	}
 
@@ -29,24 +30,30 @@ func (h *ThreadHandler) listView() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, data{Threads: threads})
+		tmpl.Execute(w, data{
+			SessionData: GetSessionData(h.sessions, r.Context()),
+			Threads:     threads,
+		})
 	}
 }
 
 func (h *ThreadHandler) createView() http.HandlerFunc {
 	type data struct {
+		SessionData
 		CSRF template.HTML // string which is not escaped
 	}
 	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/thread_create.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, data{
-			CSRF: csrf.TemplateField(r),
+			SessionData: GetSessionData(h.sessions, r.Context()),
+			CSRF:        csrf.TemplateField(r),
 		})
 	}
 }
 
 func (h *ThreadHandler) view() http.HandlerFunc {
 	type data struct {
+		SessionData
 		Thread store.Thread
 		Posts  []store.Post
 		CSRF   template.HTML // string which is not escaped
@@ -72,7 +79,12 @@ func (h *ThreadHandler) view() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, data{Thread: t, Posts: pp, CSRF: csrf.TemplateField(r)})
+		tmpl.Execute(w, data{
+			SessionData: GetSessionData(h.sessions, r.Context()),
+			Thread:      t,
+			Posts:       pp,
+			CSRF:        csrf.TemplateField(r),
+		})
 	}
 }
 

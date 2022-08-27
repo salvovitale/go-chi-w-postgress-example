@@ -18,6 +18,7 @@ type PostHandler struct {
 
 func (h *PostHandler) createView() http.HandlerFunc {
 	type data struct {
+		SessionData
 		Thread store.Thread
 		CSRF   template.HTML // string which is not escaped
 	}
@@ -38,12 +39,17 @@ func (h *PostHandler) createView() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, data{Thread: t, CSRF: csrf.TemplateField(r)})
+		tmpl.Execute(w, data{
+			SessionData: GetSessionData(h.sessions, r.Context()),
+			Thread:      t,
+			CSRF:        csrf.TemplateField(r),
+		})
 	}
 }
 
 func (h *PostHandler) view() http.HandlerFunc {
 	type data struct {
+		SessionData
 		Thread   store.Thread
 		Post     store.Post
 		Comments []store.Comment
@@ -92,7 +98,13 @@ func (h *PostHandler) view() http.HandlerFunc {
 		}
 
 		// execute the template passing both the thread and post
-		tmpl.Execute(w, data{Thread: t, Post: p, Comments: cc, CSRF: csrf.TemplateField(r)})
+		tmpl.Execute(w, data{
+			SessionData: GetSessionData(h.sessions, r.Context()),
+			Thread:      t,
+			Post:        p,
+			Comments:    cc,
+			CSRF:        csrf.TemplateField(r),
+		})
 	}
 }
 

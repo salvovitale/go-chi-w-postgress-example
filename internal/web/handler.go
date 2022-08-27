@@ -3,6 +3,7 @@ package web
 import (
 	"html/template"
 	"net/http"
+	"sync"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
@@ -60,8 +61,11 @@ type Handler struct {
 
 func (h *Handler) homeView() http.HandlerFunc {
 	type data struct {
+		SessionData
 		Posts []store.Post
 	}
+
+	var once sync.Once
 	tmpl := template.Must(template.ParseFiles("templates/layout.html", "templates/home.html"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		// retrieve all posts
@@ -70,6 +74,14 @@ func (h *Handler) homeView() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, data{Posts: pp})
+
+		once.Do(func() {
+			h.sessions.Put(r.Context(), "flash", "Welcome!")
+		})
+
+		tmpl.Execute(w, data{
+			SessionData: GetSessionData(h.sessions, r.Context()),
+			Posts:       pp,
+		})
 	}
 }
