@@ -91,14 +91,23 @@ func (h *ThreadHandler) view() http.HandlerFunc {
 func (h *ThreadHandler) save() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//parse the form
-		title := r.FormValue("title")
-		description := r.FormValue("description")
-		//TODO validate the form
+		form := CreateThreadForm{
+			Title:       r.FormValue("title"),
+			Description: r.FormValue("description"),
+		}
+
+		if !form.Validate() {
+			// lets store the error to the session
+			h.sessions.Put(r.Context(), "form", form)
+			http.Redirect(w, r, r.Referer(), http.StatusFound)
+			return
+		}
+
 		//send new thread to db
 		if err := h.store.CreateThread(&store.Thread{
 			ID:          uuid.New(),
-			Title:       title,
-			Description: description,
+			Title:       form.Title,
+			Description: form.Description,
 		}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

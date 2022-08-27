@@ -127,15 +127,24 @@ func (h *PostHandler) save() http.HandlerFunc {
 		}
 
 		//parse the form for new post info
-		title := r.FormValue("title")
-		content := r.FormValue("content")
-		//TODO validate the form
+		form := CreatePostForm{
+			Title:   r.FormValue("title"),
+			Content: r.FormValue("content"),
+		}
+
+		if !form.Validate() {
+			// lets store the error to the session
+			// session cannot store complex types so we need to encode the form see func init in form.go
+			h.sessions.Put(r.Context(), "form", form)
+			http.Redirect(w, r, r.Referer(), http.StatusFound)
+			return
+		}
 		//send new post to db
 		p := &store.Post{
 			ID:       uuid.New(),
 			ThreadID: t.ID,
-			Title:    title,
-			Content:  content,
+			Title:    form.Title,
+			Content:  form.Content,
 		}
 		if err := h.store.CreatePost(p); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

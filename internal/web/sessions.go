@@ -23,6 +23,7 @@ func NewSessionManager(dataSourceName string) (*scs.SessionManager, error) {
 // All sessions data are included in a single struct
 type SessionData struct {
 	FlashMessage string
+	Form         interface{} //so it will work with any form type
 	// UserId uuid.UUID
 }
 
@@ -32,5 +33,12 @@ func GetSessionData(session *scs.SessionManager, ctx context.Context) SessionDat
 	// Get the flash message from the session, we use pop to remove it from the session because we want to display it only once
 	data.FlashMessage = session.PopString(ctx, "flash")
 	// data.UserId, _ = session.Get(ctx, "user_id").(uuid.UUID)
+
+	// Get the form from the session
+	data.Form = session.Pop(ctx, "form")
+	if data.Form == nil {
+		data.Form = map[string]string{} // initialize the form with an empty map
+	}
+
 	return data
 }

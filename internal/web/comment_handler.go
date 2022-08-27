@@ -34,13 +34,21 @@ func (h *CommentHandler) save() http.HandlerFunc {
 		}
 
 		//parse the form for new comment info
-		content := r.FormValue("content")
-		//TODO validate the form
+		form := CreateCommentForm{
+			Content: r.FormValue("content"),
+		}
+
+		if !form.Validate() {
+			h.sessions.Put(r.Context(), "form", form)
+			http.Redirect(w, r, r.Referer(), http.StatusFound)
+			return
+		}
+
 		//send new comment to db
 		if err := h.store.CreateComment(&store.Comment{
 			ID:      uuid.New(),
 			PostID:  p.ID,
-			Content: content,
+			Content: form.Content,
 		}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
