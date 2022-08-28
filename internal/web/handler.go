@@ -32,6 +32,9 @@ func NewHandler(s store.Store, ss *scs.SessionManager, csrfKey []byte) *Handler 
 	// add csrf protection middleware
 	h.Use(csrf.Protect(csrfKey, csrf.Secure(false))) // set security to false for development otherwise the cookie will only be sent over https
 
+	// add session middleware
+	h.Use(ss.LoadAndSave)
+
 	// add custom middleware to retrieve the user from the session and add it to the request context
 	h.Use(h.withUser)
 

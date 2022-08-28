@@ -26,5 +26,5 @@ func main() {
 	h := web.NewHandler(store, sessions, csrfKey)
 
 	// to avoid the error scs: no session data in context we need to wrap the web handler which in this case embeds the chi mux into the LoadAndSave middleware
-	http.ListenAndServe(":3000", sessions.LoadAndSave(h))
+	http.ListenAndServe(":3000", h)
 }
